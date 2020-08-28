@@ -10,7 +10,7 @@ namespace TwitchSlaysTheSpire.Game
 {
     public class GameCommunicator
     {
-        public ConcurrentQueue<Command> Queue { get; set; }
+        public Bridge CommunicationBridge { get; set; }
 
         private Message CurrentMessage { get; set; }
 
@@ -23,19 +23,19 @@ namespace TwitchSlaysTheSpire.Game
                 
                 Command command = null;
                 try{
-                    while(!Queue.TryDequeue(out command)){
-                        Log("Failed to dequeue anything");
-                        System.Threading.Thread.Sleep(1000);
+                    if(!CommunicationBridge.Queue.TryDequeue(out command)){
+                        Log("Failed to dequeue anything, entering wait.");
+                        CommunicationBridge.QueueFlag.WaitOne();
                     }
                     if(command.Validate(CurrentMessage.State)){
                         Console.WriteLine(command);
                         PullState();
-                        Queue.Clear(); // Nothing in the queue is valid after we take an action, flush it
+                        CommunicationBridge.Queue.Clear(); // Nothing in the queue is valid after we take an action, flush it
                     }
                 }
                 catch(Exception e){
                     Log(e.ToString());
-                    Queue.Enqueue(command);
+                    CommunicationBridge.Queue.Enqueue(command);
                     Console.WriteLine("STATE");
                 }
             }
@@ -50,8 +50,11 @@ namespace TwitchSlaysTheSpire.Game
             var stuff = Console.ReadLine();
             File.WriteAllText($"{Environment.GetEnvironmentVariable("HOME")}/last_message.json", stuff);
             var temp = JsonSerializer.Deserialize<Message>(stuff);
-            if(temp?.State?.Combat != null)
+            if(temp?.State?.Combat != null){
                 CurrentMessage = temp; // Only save it if it actually has a state
+                CommunicationBridge.BossName = CurrentMessage.State.BossName;
+                CommunicationBridge.TimeStamp = DateTime.Now;
+            }
         }
 
         private void Log(string text){

@@ -1,7 +1,7 @@
 ﻿using TwitchSlaysTheSpire.Common;
 
 using System;
-using System.Collections.Concurrent;
+using System.Text;
 using System.IO;
 using System.Net.Sockets;
 
@@ -23,7 +23,7 @@ namespace TwitchSlaysTheSpire.IRC
 
         private bool InChannel { get; set; }
 
-        public ConcurrentQueue<Command> Queue { get; set; }
+        public Bridge CommunicationBridge { get; set; }
 
         public void Connect(string channel, string username, string password){
             Client = new TcpClient(Server, Port);
@@ -68,10 +68,20 @@ namespace TwitchSlaysTheSpire.IRC
                 message = message.Remove(1); // Pull the ! out 
                 if(message.StartsWith("help")){
                     // Help message
+                }else if(message.StartsWith("boss")){
+                    WriteMessage($"PRIVMSG #{Channel} :The boss of this zone is: {CommunicationBridge.BossName}");
+                }else if(message.StartsWith("debug")){
+                    var sb = new StringBuilder();
+                    sb.Append($"PRIVMSG #{Channel} :");
+                    sb.Append("I'm alive and listening for Twitch messages. ");
+                    sb.Append($"Last message from the game was processed at {CommunicationBridge.TimeStamp}");
+                    sb.Append($"Current Time is {CommunicationBridge.TimeStamp}");
+                    WriteMessage(sb.ToString());
                 }else{
                     try{
                         var command = CommandFactory.CreateCommand(message);
-                        Queue.Enqueue(command);
+                        CommunicationBridge.Queue.Enqueue(command);
+                        CommunicationBridge.QueueFlag.Set();
                     }
                     catch (Exception){
                         // ¯\_(ツ)_/¯

@@ -14,15 +14,15 @@ namespace TwitchSlaysTheSpire
         static void Main(string[] args)
         {
             var config = GetConfig();
-            var queue = new ConcurrentQueue<Command>();
+            var communicationBridge = new Bridge();
             var conn = new Connection(){
-                Queue = queue
+                CommunicationBridge = communicationBridge
             };
             conn.Connect(config.Channel, config.Username, config.Password);
             var listener = new Task(conn.Listen);
             listener.Start();
             var game = new GameCommunicator(){
-                Queue = queue
+                CommunicationBridge = communicationBridge
             };
             game.Listen();
             //System.Threading.Thread.Sleep(60 * 1000);

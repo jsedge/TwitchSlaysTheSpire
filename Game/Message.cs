@@ -22,6 +22,9 @@ namespace TwitchSlaysTheSpire.Game
 
         [JsonPropertyName("combat_state")]
         public CombatState Combat { get; set; }
+
+        [JsonPropertyName("act_boss")]
+        public string BossName { get; set; }
     }
 
     public class CombatState
