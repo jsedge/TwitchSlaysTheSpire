@@ -1,4 +1,5 @@
 ﻿using System;
+using TwitchSlaysTheSpire.Common;
 using TwitchSlaysTheSpire.IRC;
 using TwitchSlaysTheSpire.Game;
 using System.Collections.Concurrent;
@@ -13,14 +14,16 @@ namespace TwitchSlaysTheSpire
         static void Main(string[] args)
         {
             var config = GetConfig();
-            var conn = new Connection();
-            var queue = new ConcurrentQueue<string>();
-            conn.Queue = queue;
+            var queue = new ConcurrentQueue<Command>();
+            var conn = new Connection(){
+                Queue = queue
+            };
             conn.Connect(config.Channel, config.Username, config.Password);
             var listener = new Task(conn.Listen);
             listener.Start();
-            var game = new GameCommunicator();
-            game.Queue = queue;
+            var game = new GameCommunicator(){
+                Queue = queue
+            };
             game.Listen();
             //System.Threading.Thread.Sleep(60 * 1000);
         }

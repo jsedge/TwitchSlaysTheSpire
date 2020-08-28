@@ -1,4 +1,6 @@
-﻿using System;
+﻿using TwitchSlaysTheSpire.Common;
+
+using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Net.Sockets;
@@ -21,21 +23,17 @@ namespace TwitchSlaysTheSpire.IRC
 
         private bool InChannel { get; set; }
 
-        public ConcurrentQueue<string> Queue { get; set; }
+        public ConcurrentQueue<Command> Queue { get; set; }
 
         public void Connect(string channel, string username, string password){
             Client = new TcpClient(Server, Port);
             Stream = Client.GetStream();
             Reader = new StreamReader(Stream);
             Writer = new StreamWriter(Stream);
-            Channel = channel; // Need this for future messages, so keep it around
-            //WriteMessage($"USER {username}");
+            Channel = channel; // Need this for future messages, so keep it around, don't need user/pass though
             WriteMessage($"PASS {password}");
             WriteMessage($"NICK {username}");
-            //Console.WriteLine("Connected probably");
-            //Console.WriteLine(GetMessage());
             WriteMessage($"JOIN #{channel}");
-            //Console.WriteLine(GetMessage());
         }
 
         public void Listen(){
@@ -51,19 +49,35 @@ namespace TwitchSlaysTheSpire.IRC
 
                 if(InChannel){
                     // Start parsing out stuff
-                    var parts = message.Split(' ');
-                    var command = parts[1];
+                    var command = message.Split(' ')[1];
                     if(command == "PING"){
                         WriteMessage("PONG :tmi.twitch.tv");
                     }else if(command == "PRIVMSG"){
                         // Message, do a thing with it
-                        var enteredText = string.Join(' ', parts[3..parts.Length]).Substring(1);
-                        if(enteredText[0] == '!')
-                            Queue.Enqueue(enteredText);
+                        HandleMessage(message.Remove(message.LastIndexOf(':')));
+                        
                     }else {
                         // Not expected to happen.
                     }
                 }
+            }
+        }
+
+        public void HandleMessage(string message){
+            if(message.StartsWith('!')){
+                message = message.Remove(1); // Pull the ! out 
+                if(message.StartsWith("help")){
+                    // Help message
+                }else{
+                    try{
+                        var command = CommandFactory.CreateCommand(message);
+                        Queue.Enqueue(command);
+                    }
+                    catch (Exception){
+                        // ¯\_(ツ)_/¯
+                    }
+                }
+
             }
         }
 

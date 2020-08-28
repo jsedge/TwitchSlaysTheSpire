@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace TwitchSlaysTheSpire.Game
 {
-    class Message
+    public class Message
     {
         [JsonPropertyName("available_commands")]
         public List<string> Commands { get; set; }
@@ -15,7 +15,7 @@ namespace TwitchSlaysTheSpire.Game
         public GameState State { get; set; }
     }
 
-    class GameState
+    public class GameState
     {
         [JsonPropertyName("choice_list")]
         public List<string> Choices { get; set; }
@@ -24,7 +24,7 @@ namespace TwitchSlaysTheSpire.Game
         public CombatState Combat { get; set; }
     }
 
-    class CombatState
+    public class CombatState
     {
         [JsonPropertyName("monsters")]
         public List<object> Monsters { get; set; }
@@ -36,7 +36,7 @@ namespace TwitchSlaysTheSpire.Game
         public List<Potion> Potions { get; set; }
     }
 
-    class Card
+    public class Card
     {
         [JsonPropertyName("has_target")]
         public bool HasTarget { get; set; }
@@ -45,7 +45,7 @@ namespace TwitchSlaysTheSpire.Game
         public bool IsPlayable { get; set; }
     }
 
-    class Potion
+    public class Potion
     {
         [JsonPropertyName("requires_target")]
         public bool RequiresTarget { get; set; }
